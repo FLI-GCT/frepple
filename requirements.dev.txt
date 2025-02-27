@@ -26,6 +26,6 @@ debugpy == 1.6.6
 
 # Extra packages for windows development environments
 # pywin32
-# adodbapi
+pymssql 
 # cx_Freeze == 6.5.3
 # cx_Logging == 2.2

@@ -161,12 +161,12 @@ menu.addItem(
 menu.addItem(
     "help",
     "website",
-    url="https://frepple.com",
+    url="https://www.flowlineintegration.com/",
     window=True,
-    label=_("frePPLe website"),
+    label=_("Site Web Flow Line"),
     prefix=False,
     index=500,
 )
 menu.addItem(
-    "help", "about", javascript="about_show()", label=_("About frePPLe"), index=600
+    "help", "about", javascript="about_show()", label=_("A propos de Flow Line"), index=600
 )

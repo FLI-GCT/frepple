@@ -20,25 +20,40 @@
 # OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
 # WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #
-
+import os
+import pymssql 
 from django.db import DEFAULT_DB_ALIAS
 
 
 def getERPconnection(database=DEFAULT_DB_ALIAS):
     """
-    Customize this method to connect to the ERP database.
+    Développement Flowline pour une connexion Sage X3.
 
-    The example here uses Microsoft ADO to connect from a windows machine to a database.
-    The site https://www.connectionstrings.com/ has a handy summary of the syntax of the
-    connection strings.
+    Les paramètres de connexion doivent être définis dans les variables d'environnement.
 
-    To improve configurability of the connector we can use either:
-      a) Parameters stored in the frePPLe parameter table.
-         Benefit is that end user can then easily change these.
-      b) Settings in the frePPLe djangosettings file.
-         For storing password and other security sensitive information this file is better.
+    Le site https://www.connectionstrings.com/ a un résumé pratique de la syntaxe des chaînes de connexion.
+
+    Pour améliorer la configurabilité du connecteur, nous pouvons utiliser soit :
+      a) Des paramètres stockés dans la table de paramètres frePPLe.
+         L'avantage est que l'utilisateur final peut alors facilement les modifier.
+      b) Des paramètres dans le fichier de paramètres Django de frePPLe.
+         Pour stocker les mots de passe et autres informations sensibles, ce fichier est préférable.
     """
-    import adodbapi
+    dbname = os.getenv("X3_DBNAME", "default_dbname")
+    schema = os.getenv("X3_SCHEMA", "default_schema")
+    user = os.getenv("X3_USER", "default_user")
+    password = os.getenv("X3_PASSWORD", "default_password")
+    host = os.getenv("X3_HOST", "default_host")
 
-    connectionstring = "Provider=SQLNCLI11;Server=localhost;Database=acutec;User Id=acutec;Password=acutec;"
-    return adodbapi.connect(connectionstring, timeout=600)
+    # Split the host and instance if necessary
+    if '\\' in host:
+        parts = host.split('\\', 1)
+        if len(parts) == 2:
+            server, instance = parts
+            server = f"{server}\\{instance}"
+        else:
+            raise ValueError("Invalid host format, expected 'server\\instance'")
+    else:
+        server = host
+
+    return pymssql.connect(server=server, user=user, password=password, database=dbname, timeout=600)

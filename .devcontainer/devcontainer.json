@@ -37,6 +37,13 @@
         "POSTGRES_HOST": "host.docker.internal",
         "POSTGRES_PORT": "5432",
 		"LANG":"C.UTF-8",
-		"LC_ALL":"C.UTF-8"		
+		"LC_ALL":"C.UTF-8",
+		"FREPPLE_TIME_ZONE": "Europe/Paris",
+        "X3_DBNAME": "x3v12ia",
+		"X3_SCHEMA": "SEED",	
+        "X3_USER": "sa",
+        "X3_PASSWORD": "uzc55VYQO8WtT9j",
+        "X3_HOST": "172.16.100.94\\SAGEX3",
+        "X3_PORT": "1433"				
     }	
 }

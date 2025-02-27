@@ -156,7 +156,7 @@ if locust_installed:
                 headers=self.default_headers,
             )
             self.client.get(
-                "/static/img/frepple.svg",
+                "/static/img/LogoFlowLine.png",
                 headers=self.default_headers,
             )
 
