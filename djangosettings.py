@@ -119,7 +119,7 @@ INSTALLED_APPS = (
     "freppledb.boot",
     # Add any project specific apps here
     # "freppledb.odoo",
-    # "freppledb.erpconnection",
+    "freppledb.erpconnection",
     "freppledb.wizard",
     "freppledb.input",
     "freppledb.forecast",
