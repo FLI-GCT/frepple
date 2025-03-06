@@ -117,6 +117,7 @@ INSTALLED_APPS = (
     "django.contrib.messages",
     "django.contrib.staticfiles",
     "freppledb.boot",
+    # "freppledb.mlforecast",
     # Add any project specific apps here
     # "freppledb.odoo",
     "freppledb.erpconnection",

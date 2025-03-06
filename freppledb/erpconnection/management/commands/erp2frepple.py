@@ -37,6 +37,9 @@ from freppledb.execute.models import Task
 
 from ...utils import getERPconnection
 
+# GCT le 03/03/2025 : Gestion du schéma X3
+schema = os.getenv("X3_SCHEMA","")
+
 
 class Command(BaseCommand):
     help = """
@@ -118,6 +121,9 @@ class Command(BaseCommand):
         else:
             self.user = None
 
+        print(f"User: {self.user}")  # Debugging line
+
+
         # FrePPLe task identifier
         if options["task"]:
             try:
@@ -170,63 +176,65 @@ class Command(BaseCommand):
                 self.task.status = "18%"
                 self.task.save(using=self.database)
 
-                self.extractSupplier()
-                self.task.status = "24%"
-                self.task.save(using=self.database)
+                # self.extractSupplier()
+                # self.task.status = "24%"
+                # self.task.save(using=self.database)
 
-                self.extractResource()
-                self.task.status = "30%"
-                self.task.save(using=self.database)
+                # self.extractResource()
+                # self.task.status = "30%"
+                # self.task.save(using=self.database)
 
                 self.extractSalesOrder()
-                self.task.status = "36%"
-                self.task.save(using=self.database)
+                # self.task.status = "36%"
+                # self.task.save(using=self.database)
 
-                self.extractOperation()
-                self.task.status = "42%"
-                self.task.save(using=self.database)
+                # self.extractOperation()
+                # self.task.status = "42%"
+                # self.task.save(using=self.database)
 
                 # Note: the suboperation table is now deprecated.
                 # The same data can now be directly loaded in the the operation table.
-                self.extractSuboperation()
-                self.task.status = "48%"
-                self.task.save(using=self.database)
 
-                self.extractOperationResource()
-                self.task.status = "54%"
-                self.task.save(using=self.database)
 
-                self.extractOperationMaterial()
-                self.task.status = "60%"
-                self.task.save(using=self.database)
+                # self.extractSuboperation()
+                # self.task.status = "48%"
+                # self.task.save(using=self.database)
 
-                self.extractItemSupplier()
-                self.task.status = "66%"
-                self.task.save(using=self.database)
+                # self.extractOperationResource()
+                # self.task.status = "54%"
+                # self.task.save(using=self.database)
 
-                self.extractCalendar()
-                self.task.status = "72%"
-                self.task.save(using=self.database)
+                # self.extractOperationMaterial()
+                # self.task.status = "60%"
+                # self.task.save(using=self.database)
 
-                self.extractCalendarBucket()
-                self.task.status = "78%"
-                self.task.save(using=self.database)
+                # self.extractItemSupplier()
+                # self.task.status = "66%"
+                # self.task.save(using=self.database)
 
-                self.extractBuffer()
-                self.task.status = "84%"
-                self.task.save(using=self.database)
+                # self.extractCalendar()
+                # self.task.status = "72%"
+                # self.task.save(using=self.database)
 
-                self.extractItemSupplier()
-                self.task.status = "90%"
-                self.task.save(using=self.database)
+                # self.extractCalendarBucket()
+                # self.task.status = "78%"
+                # self.task.save(using=self.database)
 
-                self.extractCalendar()
-                self.task.status = "96%"
-                self.task.save(using=self.database)
+                # self.extractBuffer()
+                # self.task.status = "84%"
+                # self.task.save(using=self.database)
 
-                self.extractCalendarBucket()
-                self.task.status = "100%"
-                self.task.save(using=self.database)
+                # self.extractItemSupplier()
+                # self.task.status = "90%"
+                # self.task.save(using=self.database)
+
+                # self.extractCalendar()
+                # self.task.status = "96%"
+                # self.task.save(using=self.database)
+
+                # self.extractCalendarBucket()
+                # self.task.status = "100%"
+                # self.task.save(using=self.database)
 
                 self.task.status = "Done"
 
@@ -247,15 +255,28 @@ class Command(BaseCommand):
         outfilename = os.path.join(self.destination, "location.%s" % self.ext)
         print("Start extracting locations to %s" % outfilename)
         self.cursor.execute(
-            """
-      select
-        location_id, description, current_timestamp
-      from location
+            f"""
+        select '{schema}' as 'name',
+        'Tous les listes'  as 'description',
+        CAST(null AS NVARCHAR(300)) as 'category',
+        CAST(null AS NVARCHAR(300)) as 'subcategory',
+        CAST(null AS NVARCHAR(300)) as 'owner_id',
+        CONVERT(varchar, GETDATE(), 126) as 'current_timestamp'
+
+        UNION ALL
+    
+      SELECT [NAME_0] as 'location_id'
+      ,[DESCRIPTION_0] as 'description'
+      ,[CATEGORY_0] as 'category'
+      ,[SUBCATEGORY_0] as 'subcategory'
+      ,ISNULL(NULLIF([OWNER_ID_0],'Tous les listes'),'{schema}') as 'owner_id'
+      ,[CURRENT_TIME_0] as 'current_timestamp'
+  FROM {schema}.[YFLISENSLOC]
       """
         )
         with open(outfilename, "w", newline="") as outfile:
             outcsv = csv.writer(outfile, quoting=csv.QUOTE_MINIMAL)
-            outcsv.writerow(["name", "description", "lastmodified"])
+            outcsv.writerow(["name", "description", "category", "subcategory", "owner_id", "lastmodified"])
             outcsv.writerows(self.cursor.fetchall())
 
     def extractCustomer(self):
@@ -265,15 +286,28 @@ class Command(BaseCommand):
         outfilename = os.path.join(self.destination, "customer.%s" % self.ext)
         print("Start extracting customers to %s" % outfilename)
         self.cursor.execute(
+        f"""
+                select '{schema}' as 'name',
+                'Tous les clients'  as 'description',
+                CAST(null AS NVARCHAR(300)) as 'category',
+                CAST(null AS NVARCHAR(300)) as 'subcategory',
+                CAST(null AS NVARCHAR(300)) as 'owner_id',
+                CONVERT(varchar, GETDATE(), 126) as 'current_timestamp'
+
+                UNION ALL
+            
+            SELECT [NAME_0] as 'location_id'
+            ,[DESCRIPTION_0] as 'description'
+            ,[CATEGORY_0] as 'category'
+            ,[SUBCATEGORY_0] as 'subcategory'
+            ,ISNULL(NULLIF([OWNER_ID_0],'Tous les clients'),'{schema}') as 'owner_id'
+            ,[CURRENT_TIME_0] as 'current_timestamp'
+        FROM {schema}.[YFLISENSCUST]
             """
-      select distinct customer, type, current_timestamp from customer
-      union
-      select 'N/A', null, current_timestamp
-      """
         )
         with open(outfilename, "w", newline="") as outfile:
             outcsv = csv.writer(outfile, quoting=csv.QUOTE_MINIMAL)
-            outcsv.writerow(["name", "category", "lastmodified"])
+            outcsv.writerow(["name", "description", "category", "subcategory", "owner_id", "lastmodified"])
             outcsv.writerows(self.cursor.fetchall())
 
     def extractItem(self):
@@ -283,16 +317,39 @@ class Command(BaseCommand):
         outfilename = os.path.join(self.destination, "item.%s" % self.ext)
         print("Start extracting items to %s" % outfilename)
         self.cursor.execute(
-            """
-      select job, part_number, description, customer, current_timestamp
-      from job
-      where status = 'Active'
+            f"""
+
+        select  
+            '{schema}' as 'name',
+            'Tous les articles' as 'Description',
+            CAST(NULL AS NVARCHAR(300))  as 'Category',
+            CAST(NULL AS NVARCHAR(300))  as 'Subcategory',
+            CAST(NULL AS NVARCHAR(300)) as 'Owner_ID',
+            CAST(NULL AS NUMERIC) as 'Weight',
+            CAST(NULL AS NUMERIC) as 'Volume',
+            CAST(NULL AS NVARCHAR(300)) as 'UOM',
+            CAST(NULL AS NUMERIC) as 'Cost',
+            CONVERT(varchar, GETDATE(), 126) as 'current_timestamp'
+
+        UNION ALL
+            
+        SELECT [NAME_0]
+            ,[DESCRIPTION_0]
+            ,[CATEGORY_0]
+            ,[SUBCATEGORY_0]
+            ,ISNULL(NULLIF([OWNER_ID_0],'Tous les articles'),'{schema}') as 'owner_id'
+            ,[WEIGHT_0]
+            ,[VOLUME_0]
+            ,[UOM_0]
+            ,[COST_0]
+            ,[CURRENT_TIME_0]
+        FROM {schema}.[YFLISENSITM]
       """
         )
         with open(outfilename, "w", newline="") as outfile:
             outcsv = csv.writer(outfile, quoting=csv.QUOTE_MINIMAL)
             outcsv.writerow(
-                ["name", "subcategory", "description", "category", "lastmodified"]
+                ["name", "description", "category", "subcategory", "owner_id", "weight", "volume", "uom", "cost", "lastmodified"]
             )
             outcsv.writerows(self.cursor.fetchall())
 
@@ -347,6 +404,46 @@ class Command(BaseCommand):
             )
             outcsv.writerows(self.cursor.fetchall())
 
+    #  GCT le 04/03/2025 : Version originale du code
+    # def extractSalesOrder(self):
+    #     """
+    #     Map JobBOSS top level jobs into frePPLe sales orders.
+    #     """
+    #     outfilename = os.path.join(self.destination, "demand.%s" % self.ext)
+    #     print("Start extracting demand to %s" % outfilename)
+    #     self.cursor.execute(
+    #         """
+    #   select
+    #     job, job, 'SHOP', coalesce(customer, 'N/A'), 'open', order_date,
+    #     make_quantity - completed_quantity, make_quantity - completed_quantity,
+    #     description, part_number, 10, current_timestamp
+    #   from job
+    #   where status = 'Active'
+    #   and top_lvl_job = job
+    #   and make_quantity > completed_quantity
+    #   """
+    #     )
+    #     with open(outfilename, "w", newline="") as outfile:
+    #         outcsv = csv.writer(outfile, quoting=csv.QUOTE_MINIMAL)
+    #         outcsv.writerow(
+    #             [
+    #                 "name",
+    #                 "item%s" % self.fk,
+    #                 "location%s" % self.fk,
+    #                 "customer%s" % self.fk,
+    #                 "status",
+    #                 "due",
+    #                 "quantity",
+    #                 "minimum shipment" if self.ext == "csv" else "minshipment",
+    #                 "description",
+    #                 "category",
+    #                 "priority",
+    #                 "lastmodified",
+    #             ]
+    #         )
+    #         outcsv.writerows(self.cursor.fetchall())
+
+
     def extractSalesOrder(self):
         """
         Map JobBOSS top level jobs into frePPLe sales orders.
@@ -354,15 +451,15 @@ class Command(BaseCommand):
         outfilename = os.path.join(self.destination, "demand.%s" % self.ext)
         print("Start extracting demand to %s" % outfilename)
         self.cursor.execute(
-            """
-      select
-        job, job, 'SHOP', coalesce(customer, 'N/A'), 'open', order_date,
-        make_quantity - completed_quantity, make_quantity - completed_quantity,
-        description, part_number, 10, current_timestamp
-      from job
-      where status = 'Active'
-      and top_lvl_job = job
-      and make_quantity > completed_quantity
+        f"""
+      SELECT [NAME_0]
+      ,[CUSTOMER_0]
+      ,[LOCATION_0]
+      ,[ITEM_0]
+      ,[ORDER_STATUS_0]
+      ,[DUE_0]
+      ,[QUANTITY_0]
+        FROM {schema}.[YFLISENSSALE]
       """
         )
         with open(outfilename, "w", newline="") as outfile:
@@ -370,20 +467,15 @@ class Command(BaseCommand):
             outcsv.writerow(
                 [
                     "name",
+                    "customer%s" % self.fk,         
+                    "location%s" % self.fk,                               
                     "item%s" % self.fk,
-                    "location%s" % self.fk,
-                    "customer%s" % self.fk,
                     "status",
                     "due",
                     "quantity",
-                    "minimum shipment" if self.ext == "csv" else "minshipment",
-                    "description",
-                    "category",
-                    "priority",
-                    "lastmodified",
                 ]
             )
-            outcsv.writerows(self.cursor.fetchall())
+            outcsv.writerows(self.cursor.fetchall())        
 
     def extractOperation(self):
         """

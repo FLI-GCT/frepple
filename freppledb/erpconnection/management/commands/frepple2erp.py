@@ -37,6 +37,9 @@ from freppledb.execute.models import Task
 
 from ...utils import getERPconnection
 
+# GCT le 03/03/2025 : Gestion du schéma X3
+schema = os.getenv("X3_SCHEMA","")
+
 
 class Command(BaseCommand):
     help = """
@@ -75,13 +78,13 @@ class Command(BaseCommand):
             template = Template(
                 """
         {% load i18n %}
-        <form role="form" method="post" action="{{request.prefix}}/execute/launch/erp2frepple/">{% csrf_token %}
+        <form role="form" method="post" action="{{request.prefix}}/execute/launch/frepple2erp/">{% csrf_token %}
         <table>
           <tr>
             <td style="vertical-align:top; padding: 15px">
                <button  class="btn btn-primary"  type="submit" value="{% trans "launch"|capfirst %}">{% trans "launch"|capfirst %}</button>
             </td>
-            <td  style="padding: 0px 15px;">{% trans "Export erp data to frePPLe." %}
+            <td  style="padding: 0px 15px;">{% trans "Export FlowPrev data to Sage X3." %}
             </td>
           </tr>
         </table>
@@ -116,6 +119,9 @@ class Command(BaseCommand):
         else:
             self.user = None
 
+        print(f"User: {self.user}")  # Debugging line
+
+
         # FrePPLe task identifier
         if options["task"]:
             try:
@@ -146,20 +152,24 @@ class Command(BaseCommand):
         try:
             # Open database connection
             print("Connecting to the ERP database")
-            with getERPconnection() as erp_connection:
-                self.cursor_erp = erp_connection.cursor(self.database)
+            with getERPconnection(self.database) as erp_connection:
+                self.cursor_erp = erp_connection.cursor()
                 try:
-                    self.extractPurchaseOrders()
-                    self.task.status = "33%"
-                    self.task.save(using=self.database)
+                    # self.extractPurchaseOrders()
+                    # self.task.status = "25%"
+                    # self.task.save(using=self.database)
 
-                    self.extractDistributionOrders()
-                    self.task.status = "66%"
-                    self.task.save(using=self.database)
+                    # self.extractDistributionOrders()
+                    # self.task.status = "50%"
+                    # self.task.save(using=self.database)
 
-                    self.extractManufacturingOrders()
+                    # self.extractManufacturingOrders()
+                    # self.task.status = "75%"
+                    # self.task.save(using=self.database)
+                    print("extractForecast")
+                    self.extractForecast()
                     self.task.status = "100%"
-                    self.task.save(using=self.database)
+                    self.task.save(using=self.database)                    
 
                     # Optional extra planning output the ERP might be interested in:
                     #  - planned delivery date of sales orders
@@ -274,3 +284,32 @@ class Command(BaseCommand):
             """,
             output,
         )
+
+    def extractForecast(self):
+        """
+        Export manufacturing orders from frePPle.
+        We export:
+          - approved manufacturing orders.
+          - proposed manufacturing orders that start within the next day.
+        """
+        print("Start exporting manufacturing orders")
+        self.cursor_frepple.execute(
+            f"""
+            SELECT  item_id, location_id, startdate, enddate, forecasttotal
+            FROM forecastplan
+            WHERE (startdate >= now()  OR enddate >= now() )
+            AND customer_id='{schema}' AND location_id<>'{schema}'
+            AND coalesce(forecasttotal,0)<>0
+            """
+        )
+        output = [i for i in self.cursor_frepple.fetchall()]
+        for row in output:
+            self.cursor_erp.execute(
+                """
+                EXEC {schema}.usp_InsertYFPREVYNC 1, %s, %s, ' ', ' ', %s, %s, %s, null
+                """.format(schema=schema),
+                row,
+            )
+         #                 WHERE (startdate >= now()  OR enddate >= now() )
+        #    AND customer_id='{schema}' AND location_id<>'{schema}'
+        #             EXEC {schema}.usp_InsertYFPREVYNC 1,%s, %s,' ',' ', %s, %s, %s, null
