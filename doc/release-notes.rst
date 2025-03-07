@@ -10,8 +10,12 @@ You can already check out a `preview <https://demo-preview.frepple.com>`_.
 .. rubric:: System administration
 
 - | Addition of parameter archive.duration to delete the old archived data.
-  | So far, the archived data wasn't deleted. With this release, by default 
+  | So far, the archived data wasn't deleted. With this release, by default
     archived data older than 1 year are deleted.
+
+- | Addition of parameter imports_skips_audit_log to control if the
+    `import data files <command-reference.html#importfromfolder>`_ command should log messages
+    about the data changes. By default, no message is logged.
 
 - | The task scheduler now allows specifying the time zone for the automatically
     scheduled tasks.
@@ -25,6 +29,11 @@ You can already check out a `preview <https://demo-preview.frepple.com>`_.
 - | 17, 18: Bug fix. The stock reservations by sales orders were not correctly
     considered. Frepple incorrectly planned for the full quantity rather than only the
     quantity that isn't reserved yet.
+
+.. rubric:: Production planning
+
+- | Bug fix: Edits of custom attributes of type boolean on manufacturing orders, purchase orders
+    and distribution orders weren't saved correctly.
 
 
 9.6.0 (2025-02-07)
